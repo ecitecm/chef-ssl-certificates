@@ -21,8 +21,13 @@ define :ssl_certificate do
   name = params[:name] =~ /\*\.(.+)/ ? "#{$1}_wildcard" : params[:name]
   Chef::Log.info "Looking for SSL certificate #{name.inspect}"
   cert = search(:certificates, "name:#{name}").first
-  
+  Chef::Log.info "Found #{cert.inspect}"
+
+  if cert["crt"]
+    cert[:crt] = cert["crt"]
+  end
   if cert[:crt]
+    Chef::Log.info "Inserting crt from template"
     template "#{node[:ssl_certificates][:path]}/#{name}.crt" do
       source 'cert.erb'
       owner 'root'
@@ -33,7 +38,11 @@ define :ssl_certificate do
     end
   end
 
+  if cert["key"]
+    cert[:key] = cert["key"]
+  end
   if cert[:key]
+    Chef::Log.info "Inserting key from template"
     template "#{node[:ssl_certificates][:path]}/#{name}.key" do
       source 'cert.erb'
       owner 'root'
